@@ -1,0 +1,3 @@
+-main tests.Runner
+-lib utest
+--interp
