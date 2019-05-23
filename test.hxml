@@ -1,3 +1,4 @@
 -main tests.Runner
 -lib utest
---interp
+-js tests/test.js
+-cmd node tests/test.js
