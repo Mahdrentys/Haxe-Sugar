@@ -7,8 +7,6 @@ class Runner
 {
     public static function main()
     {
-        Sugar.init("tests");
-
         UTest.run(
         [
             

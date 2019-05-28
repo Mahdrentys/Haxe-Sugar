@@ -1,4 +1,5 @@
 -main tests.Runner
+--macro sugar.Sugar.use("tests")
 -lib utest
 -js tests/test.js
 -cmd node tests/test.js
