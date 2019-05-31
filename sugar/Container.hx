@@ -9,7 +9,7 @@ using haxe.EnumTools.EnumValueTools;
 class Container implements Processor
 {
     private static var instances = new Map<String, Dynamic>();
-    private static var factories = new Map<String, Void->Dynamic>();
+    private static var singletons = new Map<String, Void->Dynamic>();
     private static var buildFunctions = new Map<String, Void->Dynamic>();
 
     public function new() {}
@@ -169,9 +169,9 @@ class Container implements Processor
         {
             return instances[className];
         }
-        else if (factories.exists(className))
+        else if (singletons.exists(className))
         {
-            instances[className] = factories[className]();
+            instances[className] = singletons[className]();
             return instances[className];
         }
         else if (buildFunctions.exists(className))
@@ -201,10 +201,10 @@ class Container implements Processor
         instances[classType.getClassName()] = value;
     }
 
-    public static function setFactory<T>(classType:Class<T>, value:Void->T):Void
+    public static function setSingleton<T>(classType:Class<T>, value:Void->T):Void
     {
         remove(classType);
-        factories[classType.getClassName()] = value;
+        singletons[classType.getClassName()] = value;
     }
 
     public static function build<T>(classType:Class<T>, value:Void->T):Void
@@ -217,7 +217,7 @@ class Container implements Processor
     {
         var className = classType.getClassName();
         instances.remove(className);
-        factories.remove(className);
+        singletons.remove(className);
         buildFunctions.remove(className);
     }
 }

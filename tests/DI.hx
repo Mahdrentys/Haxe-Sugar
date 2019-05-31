@@ -162,9 +162,9 @@ class DI extends Test
         c.id == 0;
     }
 
-    public function specSetFactory():Void
+    public function specSetSingleton():Void
     {
-        Container.setFactory(C, function():C
+        Container.setSingleton(C, function():C
         {
             return new C(Std.random(1000000000));
         });
@@ -242,7 +242,7 @@ class DI extends Test
         a.test() == "testtest";
         Container.remove(Interface);
 
-        Container.setFactory(Interface, function():Interface
+        Container.setSingleton(Interface, function():Interface
         {
             return Container.get(Implementation);
         });
