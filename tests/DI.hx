@@ -237,23 +237,23 @@ class DI extends Test
 
         hasThrown == true;
 
-        Container.setValue(Interface, new Implementation());
+        Container.setValue(Interface, Container.get(Implementation));
         var a = new ImplementationUser();
         a.test() == "testtest";
         Container.remove(Interface);
 
-        Container.setFactory(Interface, function():Implementation
+        Container.setFactory(Interface, function():Interface
         {
-            return new Implementation();
+            return Container.get(Implementation);
         });
 
         var a = new ImplementationUser();
         a.test() == "testtest";
         Container.remove(Interface);
 
-        Container.setFactory(Interface, function():Implementation
+        Container.build(Interface, function():Interface
         {
-            return new Implementation();
+            return Container.get(Implementation);
         });
 
         var a = new ImplementationUser();
