@@ -81,7 +81,7 @@ class Container implements Processor
 
                                 className += className == "" ? argClassType.name : ("." + argClassType.name);
                                 var variableName = arg.name;
-                                exprs.push(macro var $variableName = sugar.Container.getByClassName($v{className}));
+                                exprs.push(macro var $variableName = sugar.Container.getByClassName($v{className}, $v{argClassType.isInterface}));
                             }
                             else
                             {
@@ -130,7 +130,7 @@ class Container implements Processor
                         }
 
                         className += className == "" ? variableClassType.name : ("." + variableClassType.name);
-                        field.kind = FVar(type, macro sugar.Container.getByClassName($v{className}));
+                        field.kind = FVar(type, macro sugar.Container.getByClassName($v{className}, $v{variableClassType.isInterface}));
                     }
                     else if (hasInjectMetadata(field.meta))
                     {
@@ -161,7 +161,7 @@ class Container implements Processor
         return null;
     }
 
-    public static function get<T>(classType:Class<T>):T
+    public static function get<T>(classType:Class<T>, isInterface = false):T
     {
         var className = classType.getClassName();
 
@@ -178,30 +178,38 @@ class Container implements Processor
         {
             return buildFunctions[className]();
         }
-        else
+        else if (!isInterface)
         {
             instances[className] = classType.createInstance([]);
             return instances[className];
         }
+        else
+        {
+            throw "Sugar DI Container: Interface \"" + classType.getClassName() + "\" was not setted.";
+            return null;
+        }
     }
 
-    public static function getByClassName(className:String):Dynamic
+    public static function getByClassName(className:String, isInterface = false):Dynamic
     {
-        return get(className.resolveClass());
+        return get(className.resolveClass(), isInterface);
     }
 
     public static function setValue<T>(classType:Class<T>, value:T):Void
     {
+        remove(classType);
         instances[classType.getClassName()] = value;
     }
 
     public static function setFactory<T>(classType:Class<T>, value:Void->T):Void
     {
+        remove(classType);
         factories[classType.getClassName()] = value;
     }
 
     public static function build<T>(classType:Class<T>, value:Void->T):Void
     {
+        remove(classType);
         buildFunctions[classType.getClassName()] = value;
     }
 

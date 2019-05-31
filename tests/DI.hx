@@ -77,6 +77,43 @@ class C2
     }
 }
 
+interface Interface
+{
+    public function test():String;
+}
+
+class Implementation implements Interface
+{
+    public function new() {}
+
+    public function test():String
+    {
+        return "test";
+    }
+}
+
+class ImplementationUser
+{
+    @inject
+    public var implementation1:Interface;
+    public var implementation2:Interface;
+
+    public function new(@inject implementation:Interface)
+    {
+        implementation2 = implementation;
+    }
+
+    public function test():String
+    {
+        return implementation1.test() + implementation2.test();
+    }
+}
+
+class Az
+{
+
+}
+
 class DI extends Test
 {
     public function specGet():Void
@@ -182,5 +219,45 @@ class DI extends Test
         var c = new C2();
         c.test("Hello") == "Hello 20";
         C2.staticTest("Hello") == "Hello 20";
+    }
+
+    public function specInterface():Void
+    {
+        var hasThrown = false;
+
+        try
+        {
+            var a = new ImplementationUser();
+            a.test() == "testtest";
+        }
+        catch (e:Dynamic)
+        {
+            hasThrown = true;
+        }
+
+        hasThrown == true;
+
+        Container.setValue(Interface, new Implementation());
+        var a = new ImplementationUser();
+        a.test() == "testtest";
+        Container.remove(Interface);
+
+        Container.setFactory(Interface, function():Implementation
+        {
+            return new Implementation();
+        });
+
+        var a = new ImplementationUser();
+        a.test() == "testtest";
+        Container.remove(Interface);
+
+        Container.setFactory(Interface, function():Implementation
+        {
+            return new Implementation();
+        });
+
+        var a = new ImplementationUser();
+        a.test() == "testtest";
+        Container.remove(Interface);
     }
 }
