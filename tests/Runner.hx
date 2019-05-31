@@ -9,7 +9,7 @@ class Runner
     {
         UTest.run(
         [
-            
+            new DI()
         ]);
     }
 }

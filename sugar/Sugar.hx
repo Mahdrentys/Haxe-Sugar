@@ -3,10 +3,11 @@ package sugar;
 import haxe.macro.Expr;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
+import haxe.macro.Type;
 
 class Sugar
 {
-    private static var processors:Array<Processor> = [];
+    private static var processors:Array<Processor> = [new Container()];
 
     macro public static function use(packageFilter:String):Void
     {
@@ -15,7 +16,8 @@ class Sugar
 
     macro public static function build():Array<Field>
     {
-        var classType = Context.getLocalClass().get();
+        var classTypeRef = Context.getLocalClass();
+        var classType:ClassType = classTypeRef != null ? classTypeRef.get() : null;
         var fields = Context.getBuildFields();
 
         for (processor in processors)
