@@ -16,13 +16,43 @@ class Sugar
 
     macro public static function build():Array<Field>
     {
-        var classTypeRef = Context.getLocalClass();
-        var classType:ClassType = classTypeRef != null ? classTypeRef.get() : null;
         var fields = Context.getBuildFields();
-
-        for (processor in processors)
+        var classTypeRef = Context.getLocalClass();
+        
+        if (classTypeRef != null)
         {
-            fields = processor.process(classType, fields);
+            var classType:ClassType = classTypeRef.get();
+
+            for (processor in processors)
+            {
+                fields = processor.processClass(classType, fields);
+            }
+        }
+        else
+        {
+            var type = Context.getLocalType();
+            if (type == null) return null;
+
+            if (type.match(TEnum(_, _)))
+            {
+                var enumTypeRef:Ref<EnumType> = type.getParameters()[0];
+                
+                for (processor in processors)
+                {
+                    var newFields = processor.processEnum(enumTypeRef.get(), fields);
+                    fields = newFields != null ? newFields : fields;
+                }
+            }
+            else if (type.match(TType(_, _)))
+            {
+                var defTypeRef:Ref<DefType> = type.getParameters()[0];
+                
+                for (processor in processors)
+                {
+                    var newFields = processor.processTypedef(defTypeRef.get(), fields);
+                    fields = newFields != null ? newFields : fields;
+                }
+            }
         }
 
         return fields;

@@ -14,136 +14,151 @@ class Container implements Processor
 
     public function new() {}
 
-    public function process(classType:ClassType, fields:Array<Field>):Array<Field>
+    public function processClass(classType:ClassType, fields:Array<Field>):Array<Field>
     {
         #if neko
-            var newFields:Array<Field> = [];
-
-            function hasInjectMetadata(metas:Array<MetadataEntry>):Bool
+            if (!classType.isInterface)
             {
-                if (metas == null) return false;
+                var newFields:Array<Field> = [];
 
-                for (meta in metas)
+                function hasInjectMetadata(metas:Array<MetadataEntry>):Bool
                 {
-                    if (meta.name == "inject") return true;
+                    if (metas == null) return false;
+
+                    for (meta in metas)
+                    {
+                        if (meta.name == "inject") return true;
+                    }
+
+                    return false;
                 }
 
-                return false;
-            }
-
-            for (field in fields)
-            {
-                if (field.kind.match(FFun(_)))
+                for (field in fields)
                 {
-                    // field is a function
-                    var func:Function = field.kind.getParameters()[0];
-                    if (func.expr == null) func.expr = {expr: EBlock([]), pos: field.pos};
-                    var exprs:Array<Expr> = func.expr.expr.getParameters()[0];
-                    exprs.reverse();
-                    var newArgs:Array<FunctionArg> = [];
-
-                    for (arg in func.args)
+                    if (field.kind.match(FFun(_)))
                     {
-                        if (hasInjectMetadata(arg.meta))
+                        // field is a function
+                        var func:Function = field.kind.getParameters()[0];
+                        if (func.expr == null) func.expr = {expr: EBlock([]), pos: field.pos};
+                        var exprs:Array<Expr> = func.expr.expr.getParameters()[0];
+                        exprs.reverse();
+                        var newArgs:Array<FunctionArg> = [];
+
+                        for (arg in func.args)
                         {
-                            if (arg.type == null)
+                            if (hasInjectMetadata(arg.meta))
                             {
-                                Context.error("Argument must have an explicit type with an @inject metadata", field.pos);
+                                if (arg.type == null)
+                                {
+                                    Context.error("Argument must have an explicit type with an @inject metadata", field.pos);
+                                    newArgs.push(arg);
+                                    continue;
+                                }
+
+                                var argType = Context.resolveType(arg.type, field.pos);
+
+                                if (!argType.match(TInst(_)))
+                                {
+                                    Context.error("Variable type must be a class with @inject metadata.", field.pos);
+                                    newFields.push(field);
+                                    continue;
+                                }
+
+                                var argClassType:ClassType = argType.getParameters()[0].get();
+                                var className = "";
+
+                                for (i in 0...argClassType.pack.length)
+                                {
+                                    if (i == 0)
+                                    {
+                                        className += argClassType.pack[i];
+                                    }
+                                    else
+                                    {
+                                        className += "." + argClassType.pack[i];
+                                    }
+                                }
+
+                                className += className == "" ? argClassType.name : ("." + argClassType.name);
+                                var variableName = arg.name;
+                                exprs.push(macro var $variableName = sugar.Container.getByClassName($v{className}));
+                            }
+                            else
+                            {
                                 newArgs.push(arg);
-                                continue;
                             }
-
-                            var argType = Context.resolveType(arg.type, field.pos);
-
-                            if (!argType.match(TInst(_)))
-                            {
-                                Context.error("Variable type must be a class with @inject metadata.", field.pos);
-                                newFields.push(field);
-                                continue;
-                            }
-
-                            var argClassType:ClassType = argType.getParameters()[0].get();
-                            var className = "";
-
-                            for (i in 0...argClassType.pack.length)
-                            {
-                                if (i == 0)
-                                {
-                                    className += argClassType.pack[i];
-                                }
-                                else
-                                {
-                                    className += "." + argClassType.pack[i];
-                                }
-                            }
-
-                            className += className == "" ? argClassType.name : ("." + argClassType.name);
-                            var variableName = arg.name;
-                            exprs.push(macro var $variableName = sugar.Container.getByClassName($v{className}));
                         }
-                        else
-                        {
-                            newArgs.push(arg);
-                        }
+
+                        func.args = newArgs;
+                        exprs.reverse();
+                        func.expr.expr = EBlock(exprs);
                     }
-
-                    func.args = newArgs;
-                    exprs.reverse();
-                    func.expr.expr = EBlock(exprs);
-                }
-                else if (field.kind.match(FVar(_, _)) && hasInjectMetadata(field.meta))
-                {
-                    // field is a variable
-                    var type:Null<ComplexType> = field.kind.getParameters()[0];
-
-                    if (type == null)
+                    else if (field.kind.match(FVar(_, _)) && hasInjectMetadata(field.meta))
                     {
-                        Context.error("Variable must have an explicit type with an @inject metadata.", field.pos);
+                        // field is a variable
+                        var type:Null<ComplexType> = field.kind.getParameters()[0];
+
+                        if (type == null)
+                        {
+                            Context.error("Variable must have an explicit type with an @inject metadata.", field.pos);
+                            newFields.push(field);
+                            continue;
+                        }
+
+                        var variableType = Context.resolveType(type, field.pos);
+
+                        if (!variableType.match(TInst(_)))
+                        {
+                            Context.error("Variable type must be a class with @inject metadata.", field.pos);
+                            newFields.push(field);
+                            continue;
+                        }
+
+                        var variableClassType:ClassType = variableType.getParameters()[0].get();
+                        var className = "";
+
+                        for (i in 0...variableClassType.pack.length)
+                        {
+                            if (i == 0)
+                            {
+                                className += variableClassType.pack[i];
+                            }
+                            else
+                            {
+                                className += "." + variableClassType.pack[i];
+                            }
+                        }
+
+                        className += className == "" ? variableClassType.name : ("." + variableClassType.name);
+                        field.kind = FVar(type, macro sugar.Container.getByClassName($v{className}));
+                    }
+                    else if (hasInjectMetadata(field.meta))
+                    {
+                        Context.error("A property with accessors can't have an @inject metadata.", field.pos);
                         newFields.push(field);
                         continue;
                     }
 
-                    var variableType = Context.resolveType(type, field.pos);
-
-                    if (!variableType.match(TInst(_)))
-                    {
-                        Context.error("Variable type must be a class with @inject metadata.", field.pos);
-                        newFields.push(field);
-                        continue;
-                    }
-
-                    var variableClassType:ClassType = variableType.getParameters()[0].get();
-                    var className = "";
-
-                    for (i in 0...variableClassType.pack.length)
-                    {
-                        if (i == 0)
-                        {
-                            className += variableClassType.pack[i];
-                        }
-                        else
-                        {
-                            className += "." + variableClassType.pack[i];
-                        }
-                    }
-
-                    className += className == "" ? variableClassType.name : ("." + variableClassType.name);
-                    field.kind = FVar(type, macro sugar.Container.getByClassName($v{className}));
-                }
-                else if (hasInjectMetadata(field.meta))
-                {
-                    Context.error("A property with accessors can't have an @inject metadata.", field.pos);
                     newFields.push(field);
-                    continue;
                 }
 
-                newFields.push(field);
+                return newFields;
             }
 
-            return newFields;
+            return null;
         #else
             return [];
         #end
+    }
+
+    public function processEnum(enumType:EnumType, fields:Array<Field>):Array<Field>
+    {
+        return null;
+    }
+
+    public function processTypedef(defType:DefType, fields:Array<Field>):Array<Field>
+    {
+        return null;
     }
 
     public static function get<T>(classType:Class<T>):T
