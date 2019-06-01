@@ -7,7 +7,7 @@ import haxe.macro.Type;
 
 class Sugar
 {
-    private static var processors:Array<Processor> = [new Container()];
+    private static var processors:Array<Processor> = [new DefaultArgs(), new Container()];
 
     macro public static function use(packageFilter:String):Void
     {
