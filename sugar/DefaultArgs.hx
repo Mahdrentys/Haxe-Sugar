@@ -4,7 +4,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 using haxe.EnumTools.EnumValueTools;
 
-class DefaultArgs implements Processor
+class DefaultArgs implements TypeProcessor
 {
     public function new() {}
 

@@ -3,7 +3,7 @@ package sugar;
 import haxe.macro.Type;
 import haxe.macro.Expr;
 
-interface Processor
+interface TypeProcessor
 {
     public function processClass(classType:ClassType, fields:Array<Field>):Array<Field>;
     public function processEnum(enumType:EnumType, fields:Array<Field>):Array<Field>;

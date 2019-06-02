@@ -6,7 +6,7 @@ import haxe.macro.Context;
 using Type;
 using haxe.EnumTools.EnumValueTools;
 
-class Container implements Processor
+class Container implements TypeProcessor
 {
     private static var instances = new Map<String, Dynamic>();
     private static var singletons = new Map<String, Void->Dynamic>();
