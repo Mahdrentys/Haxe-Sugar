@@ -10,7 +10,8 @@ class Runner
         UTest.run(
         [
             new DI(),
-            new DefaultArgs()
+            new DefaultArgs(),
+            new Fallback()
         ]);
     }
 }
