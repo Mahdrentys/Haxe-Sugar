@@ -12,4 +12,5 @@ Sugar will be used only in the files inside `yourpackage` (and its subpackages).
 
 ## Features
 
+[Complex default values](docs/Complex-default-values.md)<br/>
 [Dependency Injection](docs/DI.md)
