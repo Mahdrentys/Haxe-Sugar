@@ -25,7 +25,8 @@ class Sugar
 
             for (processor in processors)
             {
-                fields = processor.processClass(classType, fields);
+                var newFields = processor.processClass(classType, fields);
+                fields = newFields != null ? newFields : fields;
             }
         }
         else

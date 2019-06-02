@@ -16,7 +16,7 @@ class Container implements Processor
 
     public function processClass(classType:ClassType, fields:Array<Field>):Array<Field>
     {
-        #if neko
+        #if (macro || eval)
             if (!classType.isInterface)
             {
                 var newFields:Array<Field> = [];
@@ -147,7 +147,7 @@ class Container implements Processor
 
             return null;
         #else
-            return [];
+            return null;
         #end
     }
 
