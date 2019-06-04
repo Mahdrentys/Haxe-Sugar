@@ -47,7 +47,9 @@ private class FunctionBodyProcessor implements TypeProcessor
                 expr.expr = EFunction(name, func);
             case EBlock(exprs): expr.expr = EBlock(exprs.map(function(e) return processExpr(e)));
             case EFor(e1, e2): expr.expr = EFor(processExpr(e1), processExpr(e2));
+            #if (haxe_ver < 4)
             case EIn(e1, e2): expr.expr = EIn(processExpr(e1), processExpr(e2));
+            #end
             case EIf(e1, e2, e3): expr.expr = EIf(processExpr(e1), processExpr(e2), processExpr(e3));
             case EWhile(e1, e2, normalWhile): expr.expr = EWhile(processExpr(e1), processExpr(e2), normalWhile);
             case ESwitch(e, cases, edef):
@@ -68,7 +70,7 @@ private class FunctionBodyProcessor implements TypeProcessor
             case EUntyped(e): expr.expr = EUntyped(processExpr(e));
             case EThrow(e): expr.expr = EThrow(processExpr(e));
             case ECast(e, t): expr.expr = ECast(processExpr(e), t);
-            case EDisplay(e, isCall): expr.expr = EDisplay(processExpr(e), isCall);
+            case EDisplay(e, isACall): expr.expr = EDisplay(processExpr(e), isACall);
             case ETernary(e1, e2, e3): expr.expr = ETernary(processExpr(e1), processExpr(e2), processExpr(e3));
             case ECheckType(e, t): expr.expr = ECheckType(processExpr(e), t);
             case EMeta(meta, e):
