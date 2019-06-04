@@ -4,7 +4,7 @@
     "license": "MIT",
     "tags": ["sugar", "syntax", "syntaxic", "di"],
     "description": "Syntaxic sugar for Haxe.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "classPath": "",
     "releasenote": "",
     "contributors": ["Mahdrentys"],
